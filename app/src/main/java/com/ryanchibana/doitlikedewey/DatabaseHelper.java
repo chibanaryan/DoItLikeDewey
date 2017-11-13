@@ -160,13 +160,45 @@ public class DataBaseHelper extends SQLiteOpenHelper{
     // to you to create adapters for your views.
 
     /**
-     * Read all quotes from the database.
+     * Read all top-level 100's categories from the database.
      * Code from http://www.javahelps.com/2015/04/import-and-use-external-database-in.html
      * @return a List of the top categories
      */
-    public List<String> getTopCategories() {
+    public List<String> getTopCategoryList() {
         List<String> list = new ArrayList<>();
         Cursor cursor = myDataBase.rawQuery("SELECT * FROM DeweyDB100", null);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            list.add(cursor.getString(0));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return list;
+    }
+
+    /**
+     * Read segmented categories from the database.
+     * @return a List of the categories
+     */
+    public List<String> getCategoryList(int hierarchyLevel, float catIdParent) {
+        String tableName;
+        switch (hierarchyLevel) {
+            case 1:
+                return getTopCategoryList();
+            case 2:
+                tableName = "DeweyDB10";
+                break;
+            case 3:
+                tableName = "DeweyDB1";
+                break;
+            case 4:
+                tableName = "DeweyDBdot1";
+                break;
+            default:
+                throw new IllegalArgumentException("Call to wrong level of the hierarchy");
+        }
+        List<String> list = new ArrayList<>();
+        Cursor cursor = myDataBase.rawQuery("SELECT * FROM " + tableName + " WHERE CatIdParent = " + catIdParent, null);
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
             list.add(cursor.getString(0));
