@@ -1,16 +1,18 @@
 package com.ryanchibana.doitlikedewey;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by colonelchibbers on 11/6/2017.
@@ -20,6 +22,7 @@ import java.io.OutputStream;
 public class DataBaseHelper extends SQLiteOpenHelper{
 
     //The Android's default system path of your application database.
+
     private static String DB_PATH = "/data/data/com.ryanchibana.doitlikedewey/databases/";
 
     private static String DB_NAME = "dewey.db";
@@ -156,4 +159,20 @@ public class DataBaseHelper extends SQLiteOpenHelper{
     // You could return cursors by doing "return myDataBase.query(....)" so it'd be easy
     // to you to create adapters for your views.
 
+    /**
+     * Read all quotes from the database.
+     * Code from http://www.javahelps.com/2015/04/import-and-use-external-database-in.html
+     * @return a List of the top categories
+     */
+    public List<String> getTopCategories() {
+        List<String> list = new ArrayList<>();
+        Cursor cursor = myDataBase.rawQuery("SELECT * FROM DeweyDB100", null);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            list.add(cursor.getString(0));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return list;
+    }
 }
