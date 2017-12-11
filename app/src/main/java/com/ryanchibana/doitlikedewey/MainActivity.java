@@ -58,8 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // ListView Clicked item value
                 String  itemString    = (String) listView.getItemAtPosition(position);
-                itemString = itemString.substring(0,3);
-                float itemValue = Float.parseFloat(itemString);
+                float itemValue = Float.parseFloat(itemString.substring(0,3));
                 if (hierarchyLevel != 4) {
                     dbHelper.openDataBase();
                     List<String> currentCategories = dbHelper.getCategoryList(hierarchyLevel+1, itemValue);
@@ -177,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
         List<String> parentCategories;
         if (hierarchyLevel > 2) {
             String grandParentCategory = hierarchyChain.peek();
-            float grandParentCategoryValue = Float.parseFloat(grandParentCategory);
+            float grandParentCategoryValue = Float.parseFloat(grandParentCategory.substring(0,3));
             dbHelper.openDataBase();
             parentCategories = dbHelper.getCategoryList(hierarchyLevel-1, grandParentCategoryValue);
             dbHelper.close();

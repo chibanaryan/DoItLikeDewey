@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -212,13 +213,15 @@ public class DataBaseHelper extends SQLiteOpenHelper{
         String result = "";
         List<String> categoryList = new ArrayList<String>();
         String tableName;
-        int hierarchyLevel = 1;
+        int hierarchyLevel = 2;
+        float catIdParent = 0;
         while ((!resultFound) && hierarchyLevel <= 4) {
             tableName = "DeweyDB" + hierarchySuffixes[hierarchyLevel];
             Cursor cursor = myDataBase.rawQuery("SELECT * FROM " + tableName + " WHERE CatIdNum = " + f, null);
-            if ( cursor.moveToFirst() ) {
+            if ((cursor != null) && (cursor.getCount() > 0)) {
+                cursor.moveToFirst();
                 result = cursor.getString(cursor.getColumnIndex("__id")) + " - " + cursor.getString(cursor.getColumnIndex("CatText"));
-                float catIdParent = cursor.getFloat(cursor.getColumnIndex("CatIdParent"));
+                catIdParent = cursor.getFloat(cursor.getColumnIndex("CatIdParent"));
                 categoryList = getCategoryList(hierarchyLevel, catIdParent);
                 cursor.close();
                 resultFound = true;
@@ -232,7 +235,7 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 
         if (resultFound) {
             Stack<String> hierarchyChain = new Stack<String>();
-
+            hierarchyChain = getHierarchyChainFromResult(hierarchyLevel, catIdParent);
             SearchResult sr = new SearchResult(hierarchyLevel, result, categoryList, hierarchyChain);
             return sr;
         }
@@ -240,10 +243,55 @@ public class DataBaseHelper extends SQLiteOpenHelper{
     }
 
     public SearchResult queryString(String s) {
+        boolean resultFound = false;
+        String result = "";
+        List<String> categoryList = new ArrayList<String>();
+        String tableName;
+        int hierarchyLevel = 2;
+        float catIdParent = 0;
+        while ((!resultFound) && hierarchyLevel <= 4) {
+            tableName = "DeweyDB" + hierarchySuffixes[hierarchyLevel];
+            Cursor cursor = myDataBase.rawQuery("SELECT * FROM " + tableName + " WHERE UPPER(CatText) like '" + s.toUpperCase() + "%'", null);
+            if ((cursor != null) && (cursor.getCount() > 0)) {
+                cursor.moveToFirst();
+                result = cursor.getString(cursor.getColumnIndex("__id")) + " - " + cursor.getString(cursor.getColumnIndex("CatText"));
+                catIdParent = cursor.getFloat(cursor.getColumnIndex("CatIdParent"));
+                categoryList = getCategoryList(hierarchyLevel, catIdParent);
+                cursor.close();
+                resultFound = true;
+                Log.d(TAG, "Found result in " + tableName);
+                Log.d(TAG, "Result is " + result);
+                Log.d(TAG, "Category list is " + categoryList.toString());
+            } else {
+                hierarchyLevel++;
+            }
+        }
+
+        if (resultFound) {
+            Stack<String> hierarchyChain = new Stack<String>();
+            hierarchyChain = getHierarchyChainFromResult(hierarchyLevel, catIdParent);
+            SearchResult sr = new SearchResult(hierarchyLevel, result, categoryList, hierarchyChain);
+            return sr;
+        }
         return null;
     }
 
-    public Stack<String> getHierarchyChainFromResult(SearchResult sr) {
-        return null;
+    public Stack<String> getHierarchyChainFromResult(int hierarchyLevel, float catIdParent) {
+        Stack<String> hierarchyChain = new Stack<String>();
+        List<String> tempChain = new ArrayList<String>();
+        String tableName;
+        float lookupNum = catIdParent;
+        while (hierarchyLevel > 1) {
+            hierarchyLevel--;
+            tableName = "DeweyDB" + hierarchySuffixes[hierarchyLevel];
+            Cursor cursor = myDataBase.rawQuery("SELECT * FROM " + tableName + " WHERE CatIdNum = " + lookupNum, null);
+            cursor.moveToFirst();
+            tempChain.add(cursor.getString(cursor.getColumnIndex("__id")) + " - " + cursor.getString(cursor.getColumnIndex("CatText")));
+            if (hierarchyLevel > 1) lookupNum = cursor.getFloat(cursor.getColumnIndex("CatIdParent"));
+            cursor.close();
+        }
+        Collections.reverse(tempChain);
+        hierarchyChain.addAll(tempChain);
+        return hierarchyChain;
     }
 }
