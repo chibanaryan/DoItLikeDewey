@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -26,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     public ListView listView;
     public EditText editText;
     public Button button;
+    public Button breadButton;
     public Stack<String> hierarchyChain = new Stack<String>();
 
     @Override
@@ -41,6 +43,14 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 performSearch(editText.getText().toString().trim());
+            }
+        });
+
+        this.breadButton = (Button) findViewById(R.id.breadButton);
+
+        breadButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (hierarchyLevel > 1) onBackPressed();
             }
         });
 
@@ -68,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
                         ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, currentCategories);
                         listView.setAdapter(adapter);
                         hierarchyChain.push(itemString);
+                        updateBreadcrumbText();
                     }
 
                 }
@@ -95,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
             alert.setTitle("Search Result");
             alert.setMessage("Please input either a category name or number for the search.");
             alert.show();
+            return;
         }
 
         boolean hasResult = false;
@@ -141,11 +153,13 @@ public class MainActivity extends AppCompatActivity {
         hierarchyLevel = sr.hierarchyLevel;
         hierarchyChain = sr.hierarchyChain;
         listView.setAdapter(adapter);
+        updateBreadcrumbText();
     }
 
     public void updateListViewForCategories(List<String> categories) {
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, categories);
         this.listView.setAdapter(adapter);
+        updateBreadcrumbText();
     }
 
     void loadDatabase() {
@@ -163,6 +177,20 @@ public class MainActivity extends AppCompatActivity {
             throw sqle;
         }
 
+    }
+
+    public void updateBreadcrumbText() {
+        String text = "";
+        Stack<String> tempChain = new Stack<String>();
+        int level = hierarchyLevel;
+        tempChain = (Stack<String>)hierarchyChain.clone();
+        while (!tempChain.isEmpty()) {
+            level--;
+            text = String.format("%0" + level + "d", 0).replace("0","\t\t") + " < " + tempChain.pop() + "\n" + text;
+        }
+        text = "< Home\n" + text;
+
+        breadButton.setText(text);
     }
 
     @Override
@@ -191,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
             updateListViewForCategories(parentCategories);
         }
         hierarchyLevel--;
-
+        updateBreadcrumbText();
         // code here to show dialog
         //super.onBackPressed();  // optional depending on your needs
 
