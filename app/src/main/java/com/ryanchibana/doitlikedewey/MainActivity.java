@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                performSearch(editText.getText().toString());
+                performSearch(editText.getText().toString().trim());
             }
         });
 
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    performSearch(editText.getText().toString());
+                    performSearch(editText.getText().toString().trim());
                     return true;
                 }
                 return false;
@@ -91,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void performSearch(String s) {
 
-
         if (s.isEmpty()) {
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
             alert.setTitle("Search Result");
@@ -99,12 +98,32 @@ public class MainActivity extends AppCompatActivity {
             alert.show();
         }
 
-        else {
+        boolean hasResult = false;
+        //check if float
+        try{
+            float f = Float.parseFloat(s);
+            hasResult = performFloatSearch(f);
+        } catch(NumberFormatException e) {
+            hasResult = performStringSearch(s);
+        }
+
+        if (!hasResult) {
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
             alert.setTitle("Search Result");
             alert.setMessage("Your search did not return any results.");
             alert.show();
         }
+    }
+
+    public boolean performFloatSearch(float f) {
+
+        return false;
+    }
+
+    public boolean performStringSearch(String s) {
+
+
+        return false;
     }
 
     public void updateListViewForCategories(List<String> categories) {
