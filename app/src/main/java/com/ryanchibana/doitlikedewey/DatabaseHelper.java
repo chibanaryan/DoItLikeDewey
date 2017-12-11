@@ -6,6 +6,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,6 +14,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by colonelchibbers on 11/6/2017.
@@ -30,6 +34,8 @@ public class DataBaseHelper extends SQLiteOpenHelper{
     private SQLiteDatabase myDataBase;
 
     private final Context myContext;
+
+    private String[] hierarchySuffixes = {"", "100", "10", "1", "dot1"};
 
     /**
      * Constructor
@@ -152,7 +158,13 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        Log.w(TAG, "Upgrading database from version " + oldVersion + " to "
+                + newVersion + ", which will destroy all old data");
+        db.execSQL("DROP TABLE IF EXISTS DeweyDB100");
+        db.execSQL("DROP TABLE IF EXISTS DeweyDB10");
+        db.execSQL("DROP TABLE IF EXISTS DeweyDB1");
+        db.execSQL("DROP TABLE IF EXISTS DeweyDBdot1");
+        onCreate(db);
     }
 
     // Add your public helper methods to access and get content from the database.
@@ -182,31 +194,56 @@ public class DataBaseHelper extends SQLiteOpenHelper{
      * @return a List of the categories
      */
     public List<String> getCategoryList(int hierarchyLevel, float catIdParent) {
-        String tableName;
-        switch (hierarchyLevel) {
-            case 1:
-                return getTopCategoryList();
-            case 2:
-                tableName = "DeweyDB10";
-                break;
-            case 3:
-                tableName = "DeweyDB1";
-                break;
-            case 4:
-                tableName = "DeweyDBdot1";
-                break;
-            default:
-                throw new IllegalArgumentException("Call to wrong level of the hierarchy");
-        }
+        String suffix = hierarchySuffixes[hierarchyLevel];
+        String tableName = "DeweyDB" + suffix;
         List<String> list = new ArrayList<>();
         Cursor cursor = myDataBase.rawQuery("SELECT * FROM " + tableName + " WHERE CatIdParent = " + catIdParent, null);
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
             list.add(cursor.getString(cursor.getColumnIndex("__id")) + " - " + cursor.getString(cursor.getColumnIndex("CatText")));
-            //list.add(cursor.getString(0));
             cursor.moveToNext();
         }
         cursor.close();
         return list;
+    }
+
+    public SearchResult queryFloat(float f) {
+        boolean resultFound = false;
+        String result = "";
+        List<String> categoryList = new ArrayList<String>();
+        String tableName;
+        int hierarchyLevel = 1;
+        while ((!resultFound) && hierarchyLevel <= 4) {
+            tableName = "DeweyDB" + hierarchySuffixes[hierarchyLevel];
+            Cursor cursor = myDataBase.rawQuery("SELECT * FROM " + tableName + " WHERE CatIdNum = " + f, null);
+            if ( cursor.moveToFirst() ) {
+                result = cursor.getString(cursor.getColumnIndex("__id")) + " - " + cursor.getString(cursor.getColumnIndex("CatText"));
+                float catIdParent = cursor.getFloat(cursor.getColumnIndex("CatIdParent"));
+                categoryList = getCategoryList(hierarchyLevel, catIdParent);
+                cursor.close();
+                resultFound = true;
+                Log.d(TAG, "Found result in " + tableName);
+                Log.d(TAG, "Result is " + result);
+                Log.d(TAG, "Category list is " + categoryList.toString());
+            } else {
+                hierarchyLevel++;
+            }
+        }
+
+        if (resultFound) {
+            Stack<String> hierarchyChain = new Stack<String>();
+
+            SearchResult sr = new SearchResult(hierarchyLevel, result, categoryList, hierarchyChain);
+            return sr;
+        }
+        return null;
+    }
+
+    public SearchResult queryString(String s) {
+        return null;
+    }
+
+    public Stack<String> getHierarchyChainFromResult(SearchResult sr) {
+        return null;
     }
 }

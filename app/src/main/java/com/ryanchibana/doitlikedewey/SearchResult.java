@@ -9,10 +9,10 @@ import java.util.Stack;
  */
 
 public class SearchResult {
-    private int hierarchyLevel;
-    private String result;
-    private List<String> categoryList;
-    private Stack<String> hierarchyChain;
+    public int hierarchyLevel;
+    public String result;
+    public List<String> categoryList;
+    public Stack<String> hierarchyChain;
 
     public SearchResult(int hierarchyLevel, String result, List<String> categoryList, Stack<String> hierarchyChain) {
         this.hierarchyLevel = hierarchyLevel;

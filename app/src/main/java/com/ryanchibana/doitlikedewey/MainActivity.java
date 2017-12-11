@@ -116,14 +116,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean performFloatSearch(float f) {
-
+        dbHelper.openDataBase();
+        SearchResult sr = dbHelper.queryFloat(f);
+        dbHelper.close();
+        if (sr != null) {
+            updateInterfaceFromSearchResult(sr);
+            return true;
+        }
         return false;
     }
 
     public boolean performStringSearch(String s) {
-
-
+        dbHelper.openDataBase();
+        SearchResult sr = dbHelper.queryString(s);
+        dbHelper.close();
+        if (sr != null) {
+            updateInterfaceFromSearchResult(sr);
+            return true;
+        }
         return false;
+    }
+
+    public void updateInterfaceFromSearchResult(SearchResult sr) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, sr.categoryList);
+        hierarchyLevel = sr.hierarchyLevel;
+        hierarchyChain = sr.hierarchyChain;
+        listView.setAdapter(adapter);
     }
 
     public void updateListViewForCategories(List<String> categories) {
