@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Do It Like Dewey</string>
+    <string name="search_hint">Search for Dewey category here.</string>
+    <string name="search_title">Search for Dewey category</string>
 </resources>

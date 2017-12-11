@@ -169,7 +169,8 @@ public class DataBaseHelper extends SQLiteOpenHelper{
         Cursor cursor = myDataBase.rawQuery("SELECT * FROM DeweyDB100", null);
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
-            list.add(cursor.getString(0));
+            list.add(cursor.getString(cursor.getColumnIndex("__id")) + " - " + cursor.getString(cursor.getColumnIndex("CatText")));
+            //list.add(cursor.getString(0));
             cursor.moveToNext();
         }
         cursor.close();
@@ -201,7 +202,8 @@ public class DataBaseHelper extends SQLiteOpenHelper{
         Cursor cursor = myDataBase.rawQuery("SELECT * FROM " + tableName + " WHERE CatIdParent = " + catIdParent, null);
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
-            list.add(cursor.getString(0));
+            list.add(cursor.getString(cursor.getColumnIndex("__id")) + " - " + cursor.getString(cursor.getColumnIndex("CatText")));
+            //list.add(cursor.getString(0));
             cursor.moveToNext();
         }
         cursor.close();

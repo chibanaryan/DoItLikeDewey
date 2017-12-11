@@ -1,5 +1,6 @@
 package com.ryanchibana.doitlikedewey;
 
+import android.app.AlertDialog;
 import android.database.SQLException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,15 +9,23 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Stack;
 
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SearchView;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     public int hierarchyLevel = 1;
     public DataBaseHelper dbHelper;
     public ListView listView;
+    public EditText editText;
+    public Button button;
     public Stack<String> hierarchyChain = new Stack<String>();
 
     @Override
@@ -26,6 +35,15 @@ public class MainActivity extends AppCompatActivity {
         loadDatabase();
         this.listView = (ListView) findViewById(R.id.listView);
         listView.setClickable(true);
+
+        this.button = (Button) findViewById(R.id.button);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                performSearch(editText.getText().toString());
+            }
+        });
+
 
         dbHelper.openDataBase();
         List<String> topCategories = dbHelper.getTopCategoryList();
@@ -40,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // ListView Clicked item value
                 String  itemString    = (String) listView.getItemAtPosition(position);
+                itemString = itemString.substring(0,3);
                 float itemValue = Float.parseFloat(itemString);
                 if (hierarchyLevel != 4) {
                     dbHelper.openDataBase();
@@ -56,6 +75,36 @@ public class MainActivity extends AppCompatActivity {
             }
 
         });
+
+        this.editText = (EditText) findViewById(R.id.etSearch);
+        editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    performSearch(editText.getText().toString());
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
+    public void performSearch(String s) {
+
+
+        if (s.isEmpty()) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setTitle("Search Result");
+            alert.setMessage("Please input either a category name or number for the search.");
+            alert.show();
+        }
+
+        else {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setTitle("Search Result");
+            alert.setMessage("Your search did not return any results.");
+            alert.show();
+        }
     }
 
     public void updateListViewForCategories(List<String> categories) {
